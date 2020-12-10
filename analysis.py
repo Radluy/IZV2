@@ -19,7 +19,7 @@ def get_dataframe(filename: str, verbose: bool = False) -> pd.DataFrame:
     date = pd.to_datetime(df['p2a'])
     df['date'] = date
     for (name, data) in df.iteritems():
-        if (name != 'region' and name != 'date' and name != 'p13a' and name != 'p13b' and name != 'p13c'):
+        if (name != 'region' and name != 'date' and name != 'p13a' and name != 'p13b' and name != 'p13c' and name != 'p53'):
             df[name] = df[name].astype('category')
     new_size = round(df.memory_usage(deep=True).sum() / 1048576, 1)
 
@@ -64,7 +64,29 @@ def plot_conseq(df: pd.DataFrame, fig_location: str = None,
 # Ukol3: příčina nehody a škoda
 def plot_damage(df: pd.DataFrame, fig_location: str = None,
                 show_figure: bool = False):
-    pass
+    sns.set(rc={'axes.facecolor':'grey'})
+    fig, axes=plt.subplots(2, 2, figsize=(8, 8))
+    axes.set(yscale="log")
+    ax = axes.flatten()
+
+    jhm = df.loc[df['region'] == 'JHM']
+    bins = pd.IntervalIndex.from_tuples([(99, 101), (200, 209), (300, 311),
+                                         (400, 414), (500, 516), (600, 615)])
+    labels = ["nezavineno", "rychlost", "predjizdeni", 
+              "prednost", "zpusob", "zavada"]                                        
+    causes = pd.cut(jhm['p12'], bins=bins, labels=labels)
+    #new_df = pd.DataFrame(cut)
+    jhm['p53'] = jhm['p53'] / 10
+    bins = pd.IntervalIndex.from_tuples([(-2, 50), (50, 199), (200, 499),
+                                         (500, 999), (1000, 1000000)])
+    costs = pd.cut(jhm['p53'], bins=bins)
+    frame = causes.to_frame()
+    frame["cost"] = costs
+    a = sns.countplot(data=frame, x="cost", ax=ax[0]).set_title("JHM")
+    plt.tight_layout()
+    if (show_figure):
+        plt.show()
+                           
 
 # Ukol 4: povrch vozovky
 def plot_surface(df: pd.DataFrame, fig_location: str = None,
@@ -77,7 +99,7 @@ if __name__ == "__main__":
     # zde je ukazka pouziti, tuto cast muzete modifikovat podle libosti
     # skript nebude pri testovani pousten primo, ale budou volany konkreni ¨
     # funkce.
-    df = get_dataframe("accidents.pkl.gz", "file.plt")
-    plot_conseq(df, fig_location="01_nasledky.png", show_figure=True)
+    df = get_dataframe("accidents.pkl.gz")
+    #plot_conseq(df, fig_location="01_nasledky.png", show_figure=True)
     plot_damage(df, "02_priciny.png", True)
     plot_surface(df, "03_stav.png", True)
