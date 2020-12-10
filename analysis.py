@@ -82,7 +82,7 @@ def plot_damage(df: pd.DataFrame, fig_location: str = None,
     costs = pd.cut(jhm['p53'], bins=bins)
     frame = causes.to_frame()
     frame["cost"] = costs
-    #a = sns.barplot(data=frame, x="cost", y="p12", hue="p12", ax=ax[0]).set_title("JHM")
+    a = sns.countplot(data=frame, x="cost", hue="p12", ax=ax[0]).set_title("JHM")
     plt.tight_layout()
     if (show_figure):
         plt.show()
