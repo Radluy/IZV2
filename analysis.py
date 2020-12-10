@@ -53,6 +53,9 @@ def plot_conseq(df: pd.DataFrame, fig_location: str = None,
     aggr = aggr.sort_values(ascending=False)
     sns.barplot(ax=ax[3], x=aggr.index, y=aggr.values, color="orange").set_title("Pocet nehod")
 
+    if (fig_location):
+        plt.savefig(fig_location)
+
     plt.tight_layout()
     if (show_figure):
         plt.show()
@@ -74,7 +77,7 @@ if __name__ == "__main__":
     # zde je ukazka pouziti, tuto cast muzete modifikovat podle libosti
     # skript nebude pri testovani pousten primo, ale budou volany konkreni ¨
     # funkce.
-    df = get_dataframe("accidents.pkl.gz", verbose=True)
+    df = get_dataframe("accidents.pkl.gz", "file.plt")
     plot_conseq(df, fig_location="01_nasledky.png", show_figure=True)
     plot_damage(df, "02_priciny.png", True)
     plot_surface(df, "03_stav.png", True)
