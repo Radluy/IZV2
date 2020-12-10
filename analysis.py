@@ -66,7 +66,7 @@ def plot_damage(df: pd.DataFrame, fig_location: str = None,
                 show_figure: bool = False):
     sns.set(rc={'axes.facecolor':'grey'})
     fig, axes=plt.subplots(2, 2, figsize=(8, 8))
-    axes.set(yscale="log")
+    #axes.set(yscale="log")
     ax = axes.flatten()
 
     jhm = df.loc[df['region'] == 'JHM']
@@ -82,8 +82,7 @@ def plot_damage(df: pd.DataFrame, fig_location: str = None,
     costs = pd.cut(jhm['p53'], bins=bins)
     frame = causes.to_frame()
     frame["cost"] = costs
-    frame.plot()
-    #a = sns.countplot(data=frame, x="cost", ax=ax[0]).set_title("JHM")
+    #a = sns.barplot(data=frame, x="cost", y="p12", hue="p12", ax=ax[0]).set_title("JHM")
     plt.tight_layout()
     if (show_figure):
         plt.show()
