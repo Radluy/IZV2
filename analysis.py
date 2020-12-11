@@ -37,21 +37,24 @@ def plot_conseq(df: pd.DataFrame, fig_location: str = None,
     fig, axes=plt.subplots(4, 1, figsize=(8, 8))
     ax = axes.flatten()
 
+    aggrmax = df.groupby('region')['p13a'].count()
+    aggrmax = aggrmax.sort_values(ascending=False)
+    sns.barplot(ax=ax[3], x=aggrmax.index, y=aggrmax.values, color="orange").set_title("Pocet nehod")
+
     aggr = df.groupby('region')['p13a'].sum()
     aggr = aggr.sort_values(ascending=False)
-    sns.barplot(ax=ax[0], x=aggr.index, y=aggr.values, color="green").set_title("Umrtia")
+    sns.barplot(ax=ax[0], x=aggr.index, y=aggr.values, color="green", order=aggrmax.index).set_title("Umrtia")
 
     aggr = df.groupby('region')['p13b'].sum()
     aggr = aggr.sort_values(ascending=False)
-    sns.barplot(ax=ax[1], x=aggr.index, y=aggr.values, color="blue").set_title("Tazke zranenia")
+    sns.barplot(ax=ax[1], x=aggr.index, y=aggr.values, color="blue", order=aggrmax.index).set_title("Tazke zranenia")
 
     aggr = df.groupby('region')['p13c'].sum()
     aggr = aggr.sort_values(ascending=False)
-    sns.barplot(ax=ax[2], x=aggr.index, y=aggr.values, color="red").set_title("Lahke zranenia")
+    sns.barplot(ax=ax[2], x=aggr.index, y=aggr.values, color="red", order=aggrmax.index).set_title("Lahke zranenia")
 
-    aggr = df.groupby('region')['p13a'].count()
-    aggr = aggr.sort_values(ascending=False)
-    sns.barplot(ax=ax[3], x=aggr.index, y=aggr.values, color="orange").set_title("Pocet nehod")
+    for i in range(4):
+        ax[i].set_xlabel('')
 
     if (fig_location):
         plt.savefig(fig_location)
@@ -64,26 +67,40 @@ def plot_conseq(df: pd.DataFrame, fig_location: str = None,
 # Ukol3: příčina nehody a škoda
 def plot_damage(df: pd.DataFrame, fig_location: str = None,
                 show_figure: bool = False):
+    regions = ['JHM', 'PHA', 'STC', 'HKK']
     sns.set(rc={'axes.facecolor':'grey'})
-    fig, axes=plt.subplots(2, 2, figsize=(8, 8))
-    #axes.set(yscale="log")
+    fig, axes=plt.subplots(2, 2, figsize=(16, 8))
     ax = axes.flatten()
 
-    jhm = df.loc[df['region'] == 'JHM']
-    bins = pd.IntervalIndex.from_tuples([(99, 101), (200, 209), (300, 311),
-                                         (400, 414), (500, 516), (600, 615)])
-    labels = ["nezavineno", "rychlost", "predjizdeni", 
-              "prednost", "zpusob", "zavada"]                                        
-    causes = pd.cut(jhm['p12'], bins=bins, labels=labels)
-    #new_df = pd.DataFrame(cut)
-    jhm['p53'] = jhm['p53'] / 10
-    bins = pd.IntervalIndex.from_tuples([(-2, 50), (50, 199), (200, 499),
-                                         (500, 999), (1000, 1000000)])
-    costs = pd.cut(jhm['p53'], bins=bins)
-    frame = causes.to_frame()
-    frame["cost"] = costs
-    a = sns.countplot(data=frame, x="cost", hue="p12", ax=ax[0]).set_title("JHM")
+    i = 0
+    for region in regions:
+        ax[i].set(yscale="log")
+        jhm = df.loc[df['region'] == region]
+        bins = pd.IntervalIndex.from_tuples([(99, 101), (200, 209), (300, 311),
+                                            (400, 414), (500, 516), (600, 615)])
+        labels = ["nezavineno", "rychlost", "predjizdeni", 
+                "prednost", "zpusob jizdy", "zavada"]                                        
+        causes = pd.cut(jhm['p12'], bins=bins, labels=labels)
+        bins = pd.IntervalIndex.from_tuples([(-2, 50), (50, 199), (200, 499),
+                                            (500, 999), (1000, 1000000)])
+        costs = pd.cut(jhm['p53'].div(10), bins=bins)
+        frame = causes.to_frame()
+        frame["cost"] = costs
+        sns.countplot(data=frame, x="cost", hue="p12", ax=ax[i]).set_title(region)
+        ax[i].set_xlabel('Skoda[tisic KC]')
+        ax[i].set_xticklabels(["<50", "50-200", "200-500", "500-1000", ">1000"])
+        ax[i].set_ylabel('Pocet')
+        ax[i].get_legend().remove()
+        i += 1
+    handles, labelis = ax[3].get_legend_handles_labels()
+    fig.legend(handles, labels, bbox_to_anchor=(1, 0.6))
+
     plt.tight_layout()
+    plt.subplots_adjust(right=0.9)
+
+    if (fig_location):
+        plt.savefig(fig_location)
+
     if (show_figure):
         plt.show()
                            
@@ -100,6 +117,6 @@ if __name__ == "__main__":
     # skript nebude pri testovani pousten primo, ale budou volany konkreni ¨
     # funkce.
     df = get_dataframe("accidents.pkl.gz")
-    #plot_conseq(df, fig_location="01_nasledky.png", show_figure=True)
+    plot_conseq(df, fig_location="01_nasledky.png", show_figure=True)
     plot_damage(df, "02_priciny.png", True)
     plot_surface(df, "03_stav.png", True)
